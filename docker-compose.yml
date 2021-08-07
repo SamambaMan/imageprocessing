@@ -6,13 +6,21 @@ services:
     build: ./app
     volumes:
       - file_deposit:/var/file_deposit/
-    ports:
-      - 8080:8080
     networks:
-      - frontend
       - backend
     stdin_open: true
     tty: true
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    volumes:
+      - file_deposit:/var/file_deposit/
+    networks:
+      - frontend
+      - backend
+    ports:
+      - 8080:80
   redis:
     image: redis
     ports:
