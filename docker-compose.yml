@@ -1,0 +1,37 @@
+version: '3.7'
+
+services: 
+  web:
+    container_name: receiver_process
+    build: ./app
+    volumes:
+      - file_deposit:/var/file_deposit/
+    ports:
+      - 8080:8080
+    networks:
+      - frontend
+      - backend
+    stdin_open: true
+    tty: true
+  redis:
+    image: redis
+    ports:
+      - "6379:6379"
+    networks:
+      - backend
+  worker:
+    build:
+      context: ./app
+      dockerfile: Dockerfile.worker
+    depends_on:
+      - redis
+    volumes:  
+      - file_deposit:/var/file_deposit/
+    networks:
+      - backend
+networks:
+  frontend:
+  backend:
+volumes: 
+  file_deposit:
+

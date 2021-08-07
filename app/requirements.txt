@@ -1,0 +1,4 @@
+aiohttp
+celery[redis]
+python-decouple
+opencv-python

@@ -1,0 +1,12 @@
+version: '3.7'
+
+services: 
+  test_process:
+    container_name: test_process
+    build:
+      context: ./app
+      dockerfile: Dockerfile.test
+    volumes:
+      - file_deposit:/var/file_deposit/
+volumes: 
+  file_deposit:
