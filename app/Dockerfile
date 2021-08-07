@@ -4,6 +4,9 @@ WORKDIR /usr/src/app
 
 ENV PYTHONUNBUFFERED 1
 
+RUN apt-get update
+RUN apt install -y libgl1-mesa-glx
+
 RUN pip install --upgrade pip
 
 COPY ./requirements.txt .
