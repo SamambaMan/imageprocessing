@@ -1,10 +1,13 @@
 import cv2
+import operator
+from functools import reduce
+from .blurrers import BLURRERS
 
 
 def resize(input, task):
     size = [int(x) for x in task.split('x')]
     return [
-        cv2.resize(image, size, interpolation = cv2.INTER_AREA)
+        cv2.resize(image, size, interpolation=cv2.INTER_AREA)
         for image in input
     ]
 
@@ -14,16 +17,24 @@ def split(input, task):
         width, height = image.shape[:2]
         hwidth, hheight = int(width/2), int(height/2)
 
-        slice1 = image[0:hheight, 0:]
-        slice2 = image[0:hheight, 0:]
-        slice3 = image[0:hheight, 0:]
-        slice4 = image[0:hheight, 0:]
+        return [
+            image[0:hwidth, 0:hheight],
+            image[hwidth:width, 0:hheight],
+            image[0:hwidth, hheight:height],
+            image[hwidth:width, hheight:height],
+        ]
 
-    return [
-        splitsingle(image)
-        for image in input
-    ]
+    return reduce(
+        operator.add,
+        [
+            splitsingle(image)
+            for image in input
+        ]
+    )
 
 
 def blur(input, task):
-    print('blurred')
+    return [
+        BLURRERS[task](image)
+        for image in input
+    ]

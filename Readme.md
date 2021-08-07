@@ -14,7 +14,7 @@ I took for granted some assumptions based in the instructions:
 
 My assumption at this point is that the user may specify not only the combination, but the order of the parameters and processing. *The image processing is considered to be a pipeline where every step uses as input the output of the last step*, in the order the user provided. 
 
-```Resizing the imageto any reasonable size smaller than the origin image.```
+```Resizing the image to any reasonable size smaller than the origin image.```
 
 Also considered that the user may be free to resize the image as he likes. I could assume the resizing to be done in many different ways (percentual, fixed propotion by axis, totally flexible) but it was easy to make the API plain flexible and allow resizing anyway the user want.
 Also, as this processing is a pipeline, if the resizing comes after a file spliting, the splitted images shall be resized to the target size provided by the user.
@@ -38,7 +38,7 @@ The API accepts arbitrary image, no need to constrain this. I guess this fills t
 
 ```You could use opencv to process images```
 
-Chose aiohttp over Flask because is... plain fun. Not very different, same approach for interfaces end application entrypoint/blueprints.
+Chose aiohttp over Flask because is... plain fun. Not very different, same approach for interfaces and application entrypoint/blueprints.
 
 ```You’re free to use any open-source distributed processing framework include one as simple “make”```
 
