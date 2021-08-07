@@ -1,5 +1,6 @@
 import json
 from aiohttp.web import Response
+from collections import OrderedDict
 from worker.services import postprocess
 
 
@@ -15,7 +16,10 @@ def storefile(file_object):
 
 
 def processaction(item):
-    return json.loads(item[1])
+    return json.loads(
+        item[1],
+        object_pairs_hook=OrderedDict
+    )
 
 
 def apend_filename(item, filename):
