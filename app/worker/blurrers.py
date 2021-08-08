@@ -6,7 +6,6 @@ def gaussian(image):
 
 
 def updownsampling(image):
-    width, height = image.shape[:2]
     return cv2.pyrUp(
         cv2.pyrDown(
             image
