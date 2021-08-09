@@ -1,4 +1,5 @@
 import mock
+import cv2
 from collections import OrderedDict
 from worker.pipeliner import (
     output_images,
@@ -56,3 +57,22 @@ def test_iterate_job(_resi, _spli, _blur):
 
     iterate_jobs(image_list, job_list)
 
+
+@mock.patch(
+    'worker.pipeliner.cv2.imread', 
+    return_value=cv2.imread('tests/fixtures/tv-pattern.png')
+)
+@mock.patch('worker.pipeliner.cv2.imwrite')
+def test_process_item(_imwr, _imre):
+    job_item = OrderedDict([
+        ('filename', 'output.jpg'),
+        ('output', 'png'),
+        ('resize', '200x200'),
+        ('split', True),
+        ('blur', 'median'),
+    ])
+
+    process_item(job_item)
+    
+    _imre.assert_called_once_with(f'/var/file_deposit/output.jpg')
+    assert _imwr.call_count == 4
