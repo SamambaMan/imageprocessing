@@ -4,7 +4,7 @@
 
 The code is based on the provided documentation:
 
-[Assignment](docs/Assignment Cloud Software Engineer and Devops 20210805.pdf)
+[Assignment](docs/Assignment Cloud Software Engineer and Devops 20210809.pdf)
 
 The goal of this API is to provide a flexible image processing tools, based on the requirements described in this document.
 
