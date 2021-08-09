@@ -7,13 +7,6 @@ from .business import (
 )
 
 
-ORDERED_METHOD_DICT = OrderedDict([
-    ('resize', resize),
-    ('split', split),
-    ('blur', blur),
-])
-
-
 def output_images(imagelist, striped_filename, extension):
     for i, image in enumerate(imagelist):
         cv2.imwrite(
@@ -30,6 +23,12 @@ def extract_filename(job_item):
 
 
 def iterate_jobs(imagelist, job_item):
+    ORDERED_METHOD_DICT = OrderedDict([
+        ('resize', resize),
+        ('split', split),
+        ('blur', blur),
+    ])
+
     for key in job_item.keys():
         imagelist = ORDERED_METHOD_DICT[key](
             imagelist,

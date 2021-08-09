@@ -8,6 +8,16 @@ from worker.pipeliner import (
     process_item
 )
 
+
+def Any():
+    # quickand dirty compare to anything, no need to test
+    # image processing here
+    class Any():
+        def __eq__(self, other):
+            return True
+    return Any()
+
+
 @mock.patch('worker.pipeliner.cv2.imwrite')
 def test_output_image(_imw):
     # testing if the image filename buildup is correct
@@ -44,18 +54,24 @@ def test_extradt_filename():
     assert output == 'png'
 
 
-# @mock.patch('worker.business.resize')
-# @mock.patch('worker.business.split')
-# @mock.patch('worker.business.blur')
-# def test_iterate_job(_resi, _spli, _blur):
-#     job_list = OrderedDict([
-#         ('resize', '200x200'),
-#         ('split', True),
-#         ('blur', 'median'),
-#     ])
-#     image_list = [1, 2, 3, 4]
+@mock.patch('worker.pipeliner.resize', return_value=[2])
+@mock.patch('worker.pipeliner.split', return_value=[3])
+@mock.patch('worker.pipeliner.blur', return_value=[4])
+def test_iterate_job(_blur, _spli, _resi):
+    job_list = OrderedDict([
+        ('resize', '200x200'),
+        ('split', True),
+        ('blur', 'median'),
+    ])
+    image_list = [1]
 
-#     iterate_jobs(image_list, job_list)
+    result = iterate_jobs(image_list, job_list)
+    
+    _resi.assert_called_once_with([1], '200x200')
+    _spli.assert_called_once_with([2], True)
+    _blur.assert_called_once_with([3], 'median')
+
+    assert result[0] == 4
 
 
 @mock.patch(
@@ -64,14 +80,6 @@ def test_extradt_filename():
 )
 @mock.patch('worker.pipeliner.cv2.imwrite')
 def test_process_item(_imwr, _imre):
-    def Any():
-        # quickand dirty compare to anything, no need to test
-        # image processing here
-        class Any():
-            def __eq__(self, other):
-                return True
-        return Any()
-
     job_item = OrderedDict([
         ('filename', 'output.jpg'),
         ('output', 'png'),
