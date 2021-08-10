@@ -30,30 +30,14 @@ async def process(request):
     formdata = await request.post()
     items = formdata.items()
 
-    processed_parameters = list(map(
-        processaction,
-        filter(
-            lambda x: x[0] == 'actions',
-            items
-        )
-    ))
+    parameters = json.loads(formdata['actions'])
 
-    processed_files = list(map(
-        storefile,
-        filter(
-            lambda x: x[0] == 'files',
-            items
-        )
-    ))
+    processed_files = [
+        storefile(item)
+        for item in items
+        if item[0] == 'files'
+    ]
 
-    list(map(
-        lambda x: apend_filename(*x),
-        zip(
-            processed_parameters,
-            processed_files
-        )
-    ))
-
-    postprocess.delay(processed_parameters)
+    postprocess.delay(parameters, processed_files)
 
     return Response(text='OK')

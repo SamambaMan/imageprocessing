@@ -1,5 +1,4 @@
 import cv2
-from collections import OrderedDict
 from .business import (
     resize,
     split,
@@ -15,40 +14,50 @@ def output_images(imagelist, striped_filename, extension):
         )
 
 
-def extract_filename(job_item):
-    filename = job_item.pop('filename')
-    striped_filename = '.'.join(filename.split('.')[:-1])
-    output = job_item.pop('output')
-    return filename, striped_filename, output
+def extract_filename(job_list, image_filename):
+    stripped_filename = '.'.join(image_filename.split('.')[:-1])
+    return stripped_filename, job_list['output']
 
 
-def iterate_jobs(imagelist, job_item):
-    ORDERED_METHOD_DICT = OrderedDict([
-        ('resize', resize),
-        ('split', split),
-        ('blur', blur),
-    ])
+def iterate_jobs(image_list, job_item):
+    METHODS = {
+        'resize': resize,
+        'split': split,
+        'blur': blur,
+    }
 
-    for key in job_item.keys():
-        imagelist = ORDERED_METHOD_DICT[key](
-            imagelist,
-            job_item[key]
+    operations = job_item['operations']
+
+    for operation, params in operations:
+        image_list = METHODS[operation](
+            image_list,
+            params
         )
-    return imagelist
+    return image_list
 
 
-def process_item(job_item):
+def process_item(job_list, image_filename):
+    """
+        Process a image with the job_list parameters
+
+        :param job_list: the job list that applies to every image
+            in the bulk.
+        :param image: image filename to work on
+    """
     # prepare de parametrized job caracteristics
-    filename, striped_filename, output = extract_filename(job_item)
+    stripped_filename, output = extract_filename(
+        job_list,
+        image_filename
+    )
 
-    imagelist = [cv2.imread(f'/var/file_deposit/{filename}')]
+    image_list = [cv2.imread(f'/var/file_deposit/{image_filename}')]
 
     # iterate ordered keys and do what must be done acording to
     # user`s demands
-    imagelist = iterate_jobs(imagelist, job_item)
+    image_list = iterate_jobs(image_list, job_list)
 
     output_images(
-        imagelist,
-        striped_filename,
+        image_list,
+        stripped_filename,
         output
     )

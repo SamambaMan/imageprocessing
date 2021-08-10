@@ -8,8 +8,13 @@ app = Celery('tasks', broker=f'redis://{REDIS_SERVER}')
 
 
 @app.task
-def postprocess(job_list):
-    # this process assumes that the user will
-    # specify the order of the operations.
-    for job in job_list:
-        process_item(job)
+def postprocess(job_list, image_filename_list):
+    """
+        Async method to process a job_list into an image list.
+
+        :param job_list: the job list that applies to every image
+            in the bulk.
+        :param image_filename_list: list of images filenames to work on
+    """
+    for image_filename in image_filename_list:
+        process_item(job_list, image_filename)

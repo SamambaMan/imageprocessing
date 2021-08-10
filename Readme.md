@@ -116,9 +116,11 @@ http://localhost:8080/static/
 
 ```
 {
-    "resize":"200x300",
-    "split":true,
-    "blur":"gaussian|updownsampling|bilateral|median",
+    "operations": [
+        ["resize", "200x300"],
+        ["split", true],
+        ["blur", "gaussian|updownsampling|bilateral|median"]
+    ],
     "output":"jpg|png"
 }
 ```

@@ -42,15 +42,17 @@ def test_output_image(_imw):
     assert _imw.call_count == 3
 
 
-def test_extradt_filename():
+def test_extract_filename():
     job_item = {
-        'filename': 'a_file_name.jpg.png.jpeg',
         'output': 'png'
     }
-    filename, striped_filename, output = extract_filename(job_item)
 
-    assert filename == 'a_file_name.jpg.png.jpeg'
-    assert striped_filename == 'a_file_name.jpg.png'
+    stripped_filename, output = extract_filename(
+        job_item,
+        'a_file_name.jpg.png.jpeg'
+    )
+
+    assert stripped_filename == 'a_file_name.jpg.png'
     assert output == 'png'
 
 
@@ -58,11 +60,13 @@ def test_extradt_filename():
 @mock.patch('worker.pipeliner.split', return_value=[3])
 @mock.patch('worker.pipeliner.blur', return_value=[4])
 def test_iterate_job(_blur, _spli, _resi):
-    job_list = OrderedDict([
-        ('resize', '200x200'),
-        ('split', True),
-        ('blur', 'median'),
-    ])
+    job_list = {
+        'operations': [
+            ('resize', '200x200'),
+            ('split', True),
+            ('blur', 'median'),
+        ]
+    }
     image_list = [1]
 
     result = iterate_jobs(image_list, job_list)
@@ -80,15 +84,16 @@ def test_iterate_job(_blur, _spli, _resi):
 )
 @mock.patch('worker.pipeliner.cv2.imwrite')
 def test_process_item(_imwr, _imre):
-    job_item = OrderedDict([
-        ('filename', 'output.jpg'),
-        ('output', 'png'),
-        ('resize', '200x200'),
-        ('split', True),
-        ('blur', 'median'),
-    ])
+    job_item = {
+        'output': 'png',
+        'operations': [
+            ('resize', '200x200'),
+            ('split', True),
+            ('blur', 'median'),
+        ]
+    }
 
-    process_item(job_item)
+    process_item(job_item, 'output.jpg')
 
     _imre.assert_called_once_with(f'/var/file_deposit/output.jpg')
 

@@ -4,16 +4,16 @@ from functools import reduce
 from .blurrers import BLURRERS
 
 
-def resize(input_image, task):
-    size = [int(x) for x in task.split('x')]
+def resize(input_image, params):
+    size = [int(x) for x in params.split('x')]
     return [
         cv2.resize(image, size, interpolation=cv2.INTER_AREA)
         for image in input_image
     ]
 
 
-def split(input_image, task):
-    del task
+def split(input_image, params):
+    del params
 
     def splitsingle(image):
         height, width = image.shape[:2]
@@ -35,8 +35,8 @@ def split(input_image, task):
     )
 
 
-def blur(input_image, task):
+def blur(input_image, params):
     return [
-        BLURRERS[task](image)
+        BLURRERS[params](image)
         for image in input_image
     ]
