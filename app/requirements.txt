@@ -1,4 +1,4 @@
-aiohttp
-celery[redis]
-python-decouple
-opencv-python
+aiohttp==3.7.4.post0
+celery[redis]==5.1.2
+python-decouple==3.4
+opencv-python==4.5.3.56

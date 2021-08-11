@@ -1,6 +1,6 @@
 -r requirements.txt
-flake8
-ipython
-mock
-pytest
-pytest-aiohttp
+flake8==3.9.2
+ipython==7.26.0
+mock==4.0.3
+pytest==6.2.4
+pytest-aiohttp==0.3.0
