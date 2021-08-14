@@ -55,6 +55,18 @@ Scaling can be done in autoscaling tools like Gooble Kubernetes Engine, specifyi
 
 ![mpmd](docs/images/mpmd.png)
 
+### Pros
+ - Scalable, may be automatic or manual
+ - Agnostic, may be implemented using docker-compose, Kubernetes Cluster, OpenShift, Flynn, AWS and Google Cloud Solutions
+ - Scaling may consider GPU or CPU bounded parts of the processing pipeline, allowing to put energy and money where is needed
+### Cons
+ - Cost: despite manual or automatic scalability, there must be an amount of instances available so the autoscaling tools based on resource usage can work
+ - Management: this approach assumes the system administrator has full control of the cluter, therefore management and monitoring must be hand made
+
+### Improvement possibility
+ - Specify a autoscaling technology and thresholds
+
+
 ### Bibliography and study sources
  - https://cloud.google.com/kubernetes-engine/docs/concepts/cluster-autoscaler
  -https://cloud.google.com/kubernetes-engine/docs/how-to/gpus
