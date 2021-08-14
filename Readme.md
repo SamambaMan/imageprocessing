@@ -200,9 +200,9 @@ The web server provides a reverse proxy for the application instance and also wo
 localhost:8080/process - method: POST
 ```
 
-The api accepts a multipart/form-data post with two *array fields*:
- - actions - array of JSON process parameters
- - files - array of JPG images
+The api accepts a multipart/form-data post with two fields:
+ - actions - JSON process parameters
+ - files - *array* of JPG images
 
 
 After image processing, the user may check sent and processed images in:
