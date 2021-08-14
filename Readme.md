@@ -35,10 +35,10 @@ The format of  the call may be simple json string.
 ### Pros
  - Simple, easy to implement and deploy
 ### Cons
- - Won`t scale
+ - Won't scale
  - Host has to have all resources available and concentrated, including GPU
  - Ultra high latency per Municipality
- - Won`t fit a real world large scale processing scenario
+ - Won't fit a real world large scale processing scenario
 
 ### Improvement possibility
  - Coordinator may run several parallel instances depending on the server CPU/GPU count availability
@@ -49,9 +49,9 @@ A message passing architecture may be usefull in a real world scenario: data ite
 
 A process coordinator may distribute the items for processing and the availability of instances of each step should dictate processing latency.
 
-Each step may have instance number controlled, so if a single sptep is bottlenecking the pipeline, system administrator can increase instance count.
+Each step may have instance number controlled, so if a single step is bottlenecking the pipeline, system administrator can increase instance count.
 
-Scaling can be done in autoscaling tools like Gooble Kubernetes Engine, specifying various maximum and minimum thresholds and GPU quota.
+Scaling can be done in autoscaling tools like Google Kubernetes Engine, specifying various maximum and minimum thresholds and GPU quota.
 
 ![mpmd](docs/images/mpmd.png)
 
@@ -66,11 +66,22 @@ Scaling can be done in autoscaling tools like Gooble Kubernetes Engine, specifyi
 ### Improvement possibility
  - Specify a autoscaling technology and thresholds
 
+ ### Cost and Latency
+ 
+ This architecture should scale horizontaly in the pod level. The higher the pod count, the lower latency.
+
+ Increasing pod count should also bring cost up, since in a cloud service the cost is based in the instance type and count.
+
+
+ ## Architecture 3 - Cloud based
+
+This cloud based solution 
 
 ### Bibliography and study sources
  - https://cloud.google.com/kubernetes-engine/docs/concepts/cluster-autoscaler
- -https://cloud.google.com/kubernetes-engine/docs/how-to/gpus
+ - https://cloud.google.com/kubernetes-engine/docs/how-to/gpus
  - https://www.replex.io/blog/kubernetes-in-production-best-practices-for-cluster-autoscaler-hpa-and-vpa
+ - https://docs.aws.amazon.com/lambda/latest/dg/images-create.html
 
 
 <hr>
@@ -98,14 +109,14 @@ Also, as this processing is a pipeline, if the resizing comes after a file split
 
 ```All images can be assumed to be present as local files on the same machine where the service runs or any location which makes your life easier.```
 
-The service implementation allows the user to call the HTTP interfacing and, in the same request, send the image for processing as multipart. As this makes my life easier (and maybe the user`s too), I have designed this way.
+The service implementation allows the user to call the HTTP interfacing and, in the same request, send the image for processing as multipart. As this makes my life easier (and maybe the user's too), I have designed this way.
 Changing this to point to a location in the disk is also fairly simple in this API design. An usage example is also included in this repository.
 
 ```You can assume that there will be only 1 request at the same time although more request may come in while the processing is still running.```
 
 ```You do not have to take into account the issue of dependencies between requests.```
 
-The service may take concurrent calls, as the Celery worker may receive paralel requests and will process them as it appears. But, in fact, the application simplify the file tracking and concurrent calls with same file names may incur in some sort of race condition. As this tip allows me not to worry with that, I`ll use in my favor.
+The service may take concurrent calls, as the Celery worker may receive paralel requests and will process them as it appears. But, in fact, the application simplify the file tracking and concurrent calls with same file names may incur in some sort of race condition. As this tip allows me not to worry with that, I'll use in my favor.
 
 ```You can assume the height and width of all input images are 512x512 + 1024x1024 or any size limitation which is convenient for you, expect that the code should be able to support at least two different sizes.```
 
@@ -130,38 +141,49 @@ Dependencies:
  - make
  - Docker: [Get Docker](https://docs.docker.com/get-docker/)
  - Docker Compose
-```
-pip install docker-compose
+```bash
+ $ pip install docker-compose
 ```
 
 Clonning and Running: 
+```bash
+ $ git clone https://github.com/SamambaMan/imageprocessing.git
+ $ cd imageprocessing
+ $ make run
 ```
-git clone https://github.com/SamambaMan/imageprocessing.git
-cd imageprocessing
-make run
+
+Daemonize:
+
+After clonning
+```bash
+ $ make daemon
+```
+And to stop daemon:
+```bash
+ $ docker-compose stop
 ```
 
 Testing:
-```
-make test
+```bash
+ $ make test
 ```
 
 Development Console:
-```
-make devconsole
+```bash
+ $ make devconsole
 ```
 
 Debugging
 While the application is running, developer may want to debug using python pdb or similar. If so, run another terminal instance and:
 
 Web Container:
-```
-docker attach $(docker ps | grep imageprocessing_web | cut -f 1 -d ' ')
+```bash
+ $ docker attach $(docker ps | grep imageprocessing_web | cut -f 1 -d ' ')
 ```
 
 Worker Container:
-```
-docker attach $(docker ps | grep imageprocessing_web | cut -f 1 -d ' ')
+```bash
+ $ docker attach $(docker ps | grep imageprocessing_web | cut -f 1 -d ' ')
 ```
 
 
@@ -174,7 +196,7 @@ The web server provides a reverse proxy for the application instance and also wo
 
 ### Service Interface
 
-```
+```http
 localhost:8080/process - method: POST
 ```
 
@@ -185,13 +207,13 @@ The api accepts a multipart/form-data post with two *array fields*:
 
 After image processing, the user may check sent and processed images in:
 
-```
+```http
 http://localhost:8080/static/
 ```
 
 ### Actions JSON template
 
-```
+```json
 {
     "operations": [
         ["resize", "200x300"],
@@ -203,3 +225,56 @@ http://localhost:8080/static/
 ```
 
 The user may specify the parameters in any order, as the API will process them in that specified order.
+
+
+### Call example
+
+First of all, install aiohttp for requests:
+```bash
+ $ pip install aiohttp
+```
+
+Then, run the following code as a call example:
+
+In the source foder, user may execute the following Python code (I recomend ipython):
+
+```python
+import aiohttp
+from multidict import MultiDict
+
+postdata = """{
+        "operations": [
+            ["resize", "200x300"],
+            ["split", true],
+            ["blur", "gaussian"],
+            ["split", true],
+            ["blur", "gaussian"],
+            ["resize", "600x600"],
+    ["blur", "gaussian"],
+    ["split", true]
+        ],
+        "output":"jpg"
+    }"""
+
+async with aiohttp.ClientSession() as session:
+    datacontent = MultiDict([
+        ('actions', postdata),
+        ('files', open('app/tests/fixtures/test-pattern.jpeg', 'rb')),
+        ('files', open('app/tests/fixtures/tv-pattern.png', 'rb'))
+    ])
+
+    resp = await session.post(
+        'http://localhost:8080/process',
+        data=datacontent
+    )
+
+    response = await resp.content.read()
+
+    assert response == b'OK'
+```
+
+Improvements:
+ - Better integration tests: this POC doesn't include any integration tests and would be nice to have that accounted. Would be a nice oportunity to use pytest-docker-compose.
+ - Better HTTP method signatures: I could have included serializers for the HTTP interface in order to expose to the user automated API tools.
+ - Tests: I miss some error testing, forcing the code to raise exceptions and check if it's done
+ - Request validation: this application don't include any request validation to make the user's life easyer. A 500 error and that's it
