@@ -1,3 +1,68 @@
+<hr>
+
+# Assignment 1 - System Architecture
+
+## Premisses and assumptions
+
+This architechture assumes this data pipeline follow roughly this sequence diagram:
+
+![general pipeline](docs/images/general_pipeline.png)
+
+For each image in a municipality batch, execute a sequence of tasks based on the raw images.
+
+
+## Paralelization and algorithm characteristics
+
+Since each Municipality has a list of images and, for each image, the whole pipeline is executed, each image may be processed in a single thread of the processing pipeline, hence:
+
+![general pipeline](docs/images/general_pipeline_parallel.png)
+
+
+Since the steps are naive about the state or origin of the previous steps, each step is scalable in terms of how many instances available of tasks are available, receiving N messages from the last step and processing acording to the instance number or resources available.
+
+## Architecture 1 - Fully serial local processing
+
+Run the entire pipeline for each image, in the same host, using a coordinator to list images and dispatch workload:
+
+![coordinator serial docker](docs/images/coordinator_serial_docker.png)
+
+Coordinator runs a single "docker run" for each step.
+
+The inter process communication may be simple stdout/stdin between dockers.
+
+The format of  the call may be simple json string.
+
+### Pros
+ - Simple, easy to implement and deploy
+### Cons
+ - Won`t scale
+ - Host has to have all resources available and concentrated, including GPU
+ - Ultra high latency per Municipality
+ - Won`t fit a real world large scale processing scenario
+
+### Improvement possibility
+ - Coordinator may run several parallel instances depending on the server CPU/GPU count availability
+
+## Architecture 2 - Multiple Problem, Multiple Data
+
+A message passing architecture may be usefull in a real world scenario: data items or chunks of data may be distributed into the pipeline. Scalability and, therefore, latency, can be reduced increasing amount of instances of each step of the pipeline.
+
+A process coordinator may distribute the items for processing and the availability of instances of each step should dictate processing latency.
+
+Each step may have instance number controlled, so if a single sptep is bottlenecking the pipeline, system administrator can increase instance count.
+
+Scaling can be done in autoscaling tools like Gooble Kubernetes Engine, specifying various maximum and minimum thresholds and GPU quota.
+
+![mpmd](docs/images/mpmd.png)
+
+### Bibliography and study sources
+ - https://cloud.google.com/kubernetes-engine/docs/concepts/cluster-autoscaler
+ -https://cloud.google.com/kubernetes-engine/docs/how-to/gpus
+ - https://www.replex.io/blog/kubernetes-in-production-best-practices-for-cluster-autoscaler-hpa-and-vpa
+
+
+<hr>
+
 # Assignment 2 - Code
 
 ## Premisses and assumptions
