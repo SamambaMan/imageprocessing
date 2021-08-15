@@ -4,12 +4,11 @@
 
 ## Premisses and assumptions
 
-This architechture assumes this data pipeline follow roughly this sequence diagram:
+This architechture assumes that this data pipeline follow roughly this sequence diagram:
 
 ![general pipeline](docs/images/general_pipeline.png)
 
 For each image in a municipality batch, execute a sequence of tasks based on the raw images.
-
 
 ## Paralelization and algorithm characteristics
 
@@ -17,8 +16,7 @@ Since each Municipality has a list of images and, for each image, the whole pipe
 
 ![general pipeline](docs/images/general_pipeline_parallel.png)
 
-
-Since the steps are naive about the state or origin of the previous steps, each step is scalable in terms of how many instances available of tasks are available, receiving N messages from the last step and processing acording to the instance number or resources available.
+Since the steps are naive about the state or origin of the previous steps, each step is scalable in terms of how many instances are available. Receiving N messages from the last step and processing acording to the instance number or resources available is possible.
 
 ## Architecture 1 - Fully serial local processing
 
@@ -39,15 +37,16 @@ The format of  the call may be simple json string.
  - Host has to have all resources available and concentrated, including GPU
  - Ultra high latency per Municipality
  - Won't fit a real world large scale processing scenario
+ - **This is not a recomended way of doing this**
 
 ### Improvement possibility
- - Coordinator may run several parallel instances depending on the server CPU/GPU count availability
+ - Coordinator may run several parallel instances of the pipeline, depending on the server CPU/GPU count availability
 
 ## Architecture 2 - Multiple Problem, Multiple Data
 
-A message passing architecture may be usefull in a real world scenario: data items or chunks of data may be distributed into the pipeline. Scalability and, therefore, latency, can be reduced increasing amount of instances of each step of the pipeline.
+A message passing architecture may be usefull in a real world scenario: data items or chunks of data may be distributed into the pipeline. This is far more scalable and, therefore, latency can be reduced increasing amount of instances of each step of the pipeline.
 
-A process coordinator may distribute the items for processing and the availability of instances of each step should dictate processing latency.
+A process coordinator may distribute the shards for processing and the availability of instances of each step should dictate processing latency.
 
 Each step may have instance number controlled, so if a single step is bottlenecking the pipeline, system administrator can increase instance count.
 
@@ -57,7 +56,7 @@ Scaling can be done in autoscaling tools like Google Kubernetes Engine, specifyi
 
 ### Pros
  - Scalable, may be automatic or manual
- - Agnostic, may be implemented using docker-compose, Kubernetes Cluster, OpenShift, Flynn, AWS and Google Cloud Solutions
+ - Agnostic, may be implemented using docker-compose in Swarm mode, Kubernetes Cluster, OpenShift, Flynn, AWS and Google Cloud Solutions
  - Scaling may consider GPU or CPU bounded parts of the processing pipeline, allowing to put energy and money where is needed
 ### Cons
  - Cost: despite manual or automatic scalability, there must be an amount of instances available so the autoscaling tools based on resource usage can work
@@ -72,17 +71,28 @@ Scaling can be done in autoscaling tools like Google Kubernetes Engine, specifyi
 
  Increasing pod count should also bring cost up, since in a cloud service the cost is based in the instance type and count.
 
+### Final considerations
 
- ## Architecture 3 - Cloud based
-
-This cloud based solution 
+ - Don't know if there is a specification error between step 1 and 2. The I/O interface doesn't fit between steps. Maybe I have not understood how the algorithm works and the questions I made for this tasks did not help. Hope I could check this out with you later
+ - There are several products in the market for ML and serverless pipelined processing in the market, Amazon's SageMaker and Fargate are examples.
+ - In a similar maner, those docker images could be in ECR and used as Lambda Containers or deployed in Beanstalk to have benefits of a more manaaged and serverless approach for the architecture above
+ - I definately believe that the more serverless I could be in this, the better in terms of cost reduction and latency management
+ - I appreciate the this test as a usecase for me to learn cloud tech and products I'm not familiar with so thank you anyway, this was fun!
 
 ### Bibliography and study sources
  - https://cloud.google.com/kubernetes-engine/docs/concepts/cluster-autoscaler
  - https://cloud.google.com/kubernetes-engine/docs/how-to/gpus
  - https://www.replex.io/blog/kubernetes-in-production-best-practices-for-cluster-autoscaler-hpa-and-vpa
  - https://docs.aws.amazon.com/lambda/latest/dg/images-create.html
-
+ - https://aws.amazon.com/pt/blogs/machine-learning/building-a-scalable-machine-learning-pipeline-for-ultra-high-resolution-medical-images-using-amazon-sagemaker/
+ - https://github.com/aws-samples/sagemaker-distributed-training-digital-pathology-images
+ - https://aws.amazon.com/pt/blogs/architecture/field-notes-building-an-automated-image-processing-and-model-training-pipeline-for-autonomous-driving/
+ - https://aws.amazon.com/pt/solutions/implementations/aws-mlops-framework/
+ - https://github.com/awslabs/aws-mlops-framework
+ - https://github.com/awslabs/amazon-sagemaker-mlops-workshop
+ - https://github.com/aws-samples/mlops-amazon-sagemaker-devops-with-ml
+ - https://github.com/aws-samples/amazon-sagemaker-secure-mlops
+ - https://aws.amazon.com/pt/elasticbeanstalk/
 
 <hr>
 
@@ -111,6 +121,8 @@ Also, as this processing is a pipeline, if the resizing comes after a file split
 
 The service implementation allows the user to call the HTTP interfacing and, in the same request, send the image for processing as multipart. As this makes my life easier (and maybe the user's too), I have designed this way.
 Changing this to point to a location in the disk is also fairly simple in this API design. An usage example is also included in this repository.
+
+For convenience the processed files are available in the server instance in a static file folder [instructions below](#static-file-server).
 
 ```You can assume that there will be only 1 request at the same time although more request may come in while the processing is still running.```
 
@@ -181,11 +193,6 @@ Web Container:
  $ docker attach $(docker ps | grep imageprocessing_web | cut -f 1 -d ' ')
 ```
 
-Worker Container:
-```bash
- $ docker attach $(docker ps | grep imageprocessing_web | cut -f 1 -d ' ')
-```
-
 
 ### Application architecture
 ![App Arch](docs/app_architecture.png)
@@ -205,6 +212,7 @@ The api accepts a multipart/form-data post with two fields:
  - files - *array* of JPG images
 
 
+### Static File Server
 After image processing, the user may check sent and processed images in:
 
 ```http
@@ -234,9 +242,7 @@ First of all, install aiohttp for requests:
  $ pip install aiohttp
 ```
 
-Then, run the following code as a call example:
-
-In the source foder, user may execute the following Python code (I recomend ipython):
+Then, run the following Python code as a call example at the level of the project source foder (I recomend ipython):
 
 ```python
 import aiohttp
